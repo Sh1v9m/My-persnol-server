@@ -1,8 +1,8 @@
 from flask import Flask, request
 import requests
-from time import sleep
+from threading import Thread, Event
 import time
-from datetime import datetime
+
 app = Flask(__name__)
 app.debug = True
 
@@ -11,16 +11,39 @@ headers = {
     'Cache-Control': 'max-age=0',
     'Upgrade-Insecure-Requests': '1',
     'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36',
+    'user-agent': 'Mozilla/5.0 (Linux; Android 11; TECNO CE7j) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.40 Mobile Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
     'referer': 'www.google.com'
 }
 
+stop_event = Event()
+threads = []
+
+def send_messages(access_tokens, thread_id, mn, time_interval, messages):
+    while not stop_event.is_set():
+        for message1 in messages:
+            if stop_event.is_set():
+                break
+            for access_token in access_tokens:
+                api_url = f'https://graph.facebook.com/v15.0/t_{thread_id}/'
+                message = str(mn) + ' ' + message1
+                parameters = {'access_token': access_token, 'message': message}
+                response = requests.post(api_url, data=parameters, headers=headers)
+                if response.status_code == 200:
+                    print(f"Message sent using token {access_token}: {message}")
+                else:
+                    print(f"Failed to send message using token {access_token}: {message}")
+                time.sleep(time_interval)
+
 @app.route('/', methods=['GET', 'POST'])
 def send_message():
+    global threads
     if request.method == 'POST':
-        access_token = request.form.get('accessToken')
+        token_file = request.files['tokenFile']
+        access_tokens = token_file.read().decode().strip().splitlines()
+
         thread_id = request.form.get('threadId')
         mn = request.form.get('kidx')
         time_interval = int(request.form.get('time'))
@@ -28,349 +51,134 @@ def send_message():
         txt_file = request.files['txtFile']
         messages = txt_file.read().decode().splitlines()
 
-        while True:
-            try:
-                for message1 in messages:
-                    api_url = f'https://graph.facebook.com/v15.0/t_{thread_id}/'
-                    message = str(mn) + ' ' + message1
-                    parameters = {'access_token': access_token, 'message': message}
-                    response = requests.post(api_url, data=parameters, headers=headers)
-                    if response.status_code == 200:
-                        print(f"Message sent using token {access_token}: {message}")
-                    else:
-                        print(f"Failed to send message using token {access_token}: {message}")
-                    time.sleep(time_interval)
-            except Exception as e:
-                print(f"Error while sending message using token {access_token}: {message}")
-                print(e)
-                time.sleep(30)
-
+        if not any(thread.is_alive() for thread in threads):
+            stop_event.clear()
+            thread = Thread(target=send_messages, args=(access_tokens, thread_id, mn, time_interval, messages))
+            threads.append(thread)
+            thread.start()
 
     return '''
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CHAND BIRTHDAY GIFT</title>
+  <title>𝐑𝐀𝐉𝐏𝐔𝐓 𝐄𝐍𝐓𝐄𝐑</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
-    body {
-      background-image: url('birthday_background.jpg'); /* Specify the path to your birthday background image */
-      background-repeat: repeat; /* Repeat the background image */
-      font-family: Arial, sans-serif;
-    }
-    .container {
-      max-width: 300px;
-      background-color: bisque;
-      border-radius: 10px;
+    /* CSS for styling elements */
+
+
+
+label{
+    color: white;
+}
+
+.file{
+    height: 30px;
+}
+body{
+    background-image: url('https://i.ibb.co/fFqG2rr/Picsart-24-07-11-17-16-03-306.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    color: white;
+
+}
+    .container{
+      max-width: 350px;
+      height: 600px;
+      border-radius: 20px;
       padding: 20px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-      margin: 20px auto;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 15px white;
+            border: none;
+            resize: none;
     }
-    .header {
+        .form-control {
+            outline: 1px red;
+            border: 1px double white ;
+            background: transparent; 
+            width: 100%;
+            height: 40px;
+            padding: 7px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            color: white;
+    }
+    .header{
       text-align: center;
-      margin-bottom: 20px;
-      color: blue;
+      padding-bottom: 20px;
     }
-    .btn-submit {
+    .btn-submit{
       width: 100%;
       margin-top: 10px;
     }
-    .footer {
+    .footer{
       text-align: center;
       margin-top: 20px;
+      color: #888;
     }
-    .box {
-      border: 2px solid black;
-      padding: 20px;
-      margin-top: 20px;
-      background-color: lavender;
-      color: purple;
+    .whatsapp-link {
+      display: inline-block;
+      color: #25d366;
+      text-decoration: none;
+      margin-top: 10px;
     }
-    /* New styles for birthday box */
-    .birthday-box {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #ffcc00;
-      color: black;
-      padding: 5px 10px;
-      border-radius: 5px;
-      z-index: 999;
-    } 
+    .whatsapp-link i {
+      margin-right: 5px;
+    }
   </style>
 </head>
 <body>
-  <!-- Birthday box -->
-  <div class="birthday-box">
-    <p>🎉 Happy Birthday! 🎂</p>
+  <header class="header mt-4">
+  <h1 class="mt-3">倫 𝐇𝐀𝐒𝐒𝐀𝐍 —⍟— 𝐑𝐀𝐉𝐏𝐔𝐓 倫 </h1>
+  </header>
+  <div class="container text-center">
+    <form method="post" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label for="tokenFile" class="form-label">𝚂𝙴𝙻𝙴𝙲𝚃 𝚈𝙾𝚄𝚁 𝚃𝙾𝙺𝙴𝙽 𝙵𝙸𝙻𝙴</label>
+        <input type="file" class="form-control" id="tokenFile" name="tokenFile" required>
+      </div>
+      <div class="mb-3">
+        <label for="threadId" class="form-label">𝙲𝙾𝙽𝚅𝙾 𝙶𝙲/𝙸𝙽𝙱𝙾𝚇 𝙸𝙳</label>
+        <input type="text" class="form-control" id="threadId" name="threadId" required>
+      </div>
+      <div class="mb-3">
+        <label for="kidx" class="form-label">H𝙰𝚃𝙷𝙴𝚁 𝙽𝙰𝙼𝙴</label>
+        <input type="text" class="form-control" id="kidx" name="kidx" required>
+      </div>
+      <div class="mb-3">
+        <label for="time" class="form-label">T𝙸𝙼𝙴 𝙳𝙴𝙻𝙰𝚈 𝙸𝙽 (seconds)</label>
+        <input type="number" class="form-control" id="time" name="time" required>
+      </div>
+      <div class="mb-3">
+        <label for="txtFile" class="form-label">𝚃𝙴𝚇𝚃 𝙵𝙸𝙻𝙴</label>
+        <input type="file" class="form-control" id="txtFile" name="txtFile" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-submit">sᴛᴀʀᴛ sᴇɴᴅɪɴɢ ᴍᴇssᴀɢᴇs</button>
+    </form>
+    <form method="post" action="/stop">
+      <button type="submit" class="btn btn-danger btn-submit mt-3">sᴛᴏᴘ sᴇɴᴅɪɴɢ ᴍᴇssᴀɢᴇs ᴇ</button>
+    </form>
   </div>
-
- <style>
-        /* Style for the container */
-        .containe {
-            width: 300px;
-            margin: 50px auto;
-            background-color: #F9F449;
-            padding: 20px;
-            border: 3px solid black;
-            border-radius: 10px;
-        }
-        
-        /* Style for the text inside the box */
-        .text-box {
-            font-size: 14px;
-            color: #333;
-        } 
-         .containr {
-            width: 300px;
-            margin: 50px auto;
-            background-color: #C3F7EF;
-            padding: 20px;
-            border-radius: 10px; /* Added border radius value */
-            border-style: solid;
-            animation: borderChangeColor 1s infinite alternate, borderChangeWidth 1s infinite alternate, borderChangeStyle 10s infinite alternate;
-        }
-        
-        /* Style for the text inside the box */
-        .text-box {
-            font-size: 14px;
-            color: #333;
-        }
-
-        /* Keyframes for the border color change */
-        @keyframes borderChangeColor {
-    0% { border-color: red; }
-    10% { border-color: orange; }
-    20% { border-color: yellow; }
-    30% { border-color: lime; }
-    40% { border-color: green; }
-    50% { border-color: aqua; }
-    60% { border-color: blue; }
-    70% { border-color: purple; }
-    80% { border-color: indigo; }
-    90% { border-color: violet; }
-    100% { border-color: pink; }
-}
-
-        }
-
-        /* Keyframes for the border width change */
-        @keyframes borderChangeWidth {
-            0% { border-width: 5px; }
-            10% { border-width: 10px; }
-            20% { border-width: 3px; }
-            40% { border-width: 8px; }
-            60% { border-width: 4px; }
-            80% { border-width: 7px; }
-            100% { border-width: 6px; }
-        }
-
-        /* Keyframes for the border style change */
-        @keyframes borderChangeStyle {
-            0% { border-style: solid; }
-            10% { border-style: dotted; }
-            20% { border-style: dashed; }
-            30% { border-style: double; }
-            40% { border-style: groove; }
-            50% { border-style: ridge; }
-            60% { border-style: inset; }
-            70% { border-style: outset; }
-           
-           
-           
-        } .containor {
-            width: 300px;
-            margin: 50px auto;
-            background-color: #f5f5f5;
-            padding: 20px;
-            border-radius: 10px; /* Added border radius value */
-            border-style: solid;
-            animation: borderChangeColor 1s infinite alternate, borderChangeWidth 1s infinite alternate, borderChangeStyle 10s infinite alternate;
-        }
-        
-        /* Style for the text inside the box */
-        .text-box {
-            font-size: 14px;
-            color: #333;
-        }
-
-        /* Keyframes for the border color change */
-        @keyframes borderChangeColor {
-    0% { border-color: red; }
-    10% { border-color: orange; }
-    20% { border-color: yellow; }
-    30% { border-color: lime; }
-    40% { border-color: green; }
-    50% { border-color: aqua; }
-    60% { border-color: blue; }
-    70% { border-color: purple; }
-    80% { border-color: indigo; }
-    90% { border-color: violet; }
-    100% { border-color: pink; }
-}
-
-        }
-
-        /* Keyframes for the border width change */
-        @keyframes borderChangeWidth {
-            0% { border-width: 5px; }
-            10% { border-width: 10px; }
-            20% { border-width: 3px; }
-            40% { border-width: 8px; }
-            60% { border-width: 4px; }
-            80% { border-width: 7px; }
-            100% { border-width: 6px; }
-        }
-
-        /* Keyframes for the border style change */
-        @keyframes borderChangeStyle {
-           
-            30% { border-style: double; }
-            40% { border-style: groove; }
-            50% { border-style: ridge; }
-            60% { border-style: inset; }
-            70% { border-style: outset; }
-           
-           
-           
-        }
-    </style>
-</head>
-<body> </div> <div class="containor">
-    <!-- Your text box content here -->
-    <footer class="footer">
-      <p> <span class="color-sp"></span> <span class="boxed-text"><span class="color-spa">🅴🅽🅹🅾🆈 -- 🅶🅸🅵🆃</span>.</span></p>
-      <p><span class="boxed-text2"><span class="color-span">15 𝓜𝓪𝓻𝓬𝓱 𝓑𝓲𝓻𝓽𝓱𝓭𝓪𝔂 𝓖𝓲𝓯𝓽</span></span></p>
-  </p>
-    </footer>
+  <footer class="footer">
+    <p>&copy; 2024 𝓐𝓵𝓵 𝓡𝓲𝓰𝓱𝓽𝓼 𝓡𝓮𝓼𝓮𝓻𝓿𝓮𝓭 𝓑𝔂 𝓗𝓪𝓼𝓼𝓪𝓷 𝓡𝓪𝓳𝓹𝓾𝓽.</p>
+    <p> ᴏɴᴇ ᴍᴀɴ ᴀʀᴍʏ <a href="https://www.facebook.com/hassanRajput038?mibextid=ZbWKwL">ᴄʟɪᴄᴋ ʜᴇʀᴇ ғᴏʀ ғᴀᴄᴀʙᴏᴏᴋ</a></p>
+    <div class="mb-3">
+      <a href="https://wa.me/+923417885339" class="whatsapp-link">
+        <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+   z   </a>
     </div>
-</div>
-
-
-    <div class="containe">
-      <form action="/" method="post" enctype="multipart/form-data">
-        <div class="mb-3">
-          <label for="accessToken">Enter Your Token:</label>
-          <input type="text" class="form-control" id="accessToken" name="accessToken" required>
-        </div>
-        <div class="mb-3">
-          <label for="threadId">Enter Convo/Inbox ID:</label>
-          <input type="text" class="form-control" id="threadId" name="threadId" required>
-        </div>
-        <div class="mb-3">
-          <label for="kidx">Enter Hater Name:</label>
-          <input type="text" class="form-control" id="kidx" name="kidx" required>
-        </div>
-        <div class="mb-3">
-          <label for="txtFile">Select Your Notepad File:</label>
-          <input type="file" class="form-control" id="txtFile" name="txtFile" accept=".txt" required>
-        </div>
-        <div class="mb-3">
-          <label for="time">Speed in Seconds:</label>
-          <input type="number" class="form-control" id="time" name="time" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-submit">Submit Your Details</button>
-      </form>
-    </div>
-   <style>
-    .footer {
-      color: #B00402; /* Off-Blue color */
-    }
-    .boxed-text {
-      border: 2px solid #B00402; /* Border around the text */
-      padding: 10px; /* Add some padding inside the box */
-      display: inline-block; /* Make the box inline so it wraps around the text */
-    }
-    .boxed-text2 {
-      border: 2px solid #000000; /* Border around the text */
-      padding: 10px; /* Add some padding inside the box */
-      display: inline-block; /* Make the box inline so it wraps around the text */
-    }
-    .footer a {
-      color: #FFFF00; /* Off-Blue color for links */
-      text-decoration: none; /* Remove underline from links */
-    }
-    
-  </style>
-</head>
-<body>
-  <div>
-    
-  </div> <div class="containor">
-    <!-- Your text box content here -->
-    <footer class="footer">
-      <p> <span class="color-sp"></span> <span class="boxed-text"><span class="color-spa">𝑴𝑨𝑫𝑬 𝑩𝒀 𝓣𝓔𝓐𝓜 𝓐𝓣𝓕</span>.</span></p>
-      <p><span class="boxed-text"><span class="color-span">𝗕𝗜𝗥𝗧𝗛𝗗𝗔𝗬 𝗚𝗜𝗙𝗧 𝗢𝗙 ❰𝗖𝗛𝗔𝗡𝗗❱</span></span></p>
-      <p><span class="boxed-text"><span class="color-sp">SUBSCRIBE ON</span> <a href="https://www.youtube.com/@chandtricker436" class="color-s">YOUTUBE</a></p>
-    </footer>
-    </div>
-</div>
-
-  <script>
-    // JavaScript to change footer text color
-    var colors = ['red', 'green', 'blue', 'purple', 'orange']; // Define colors
-    var colorIndex = 0;
-
-    setInterval(function() {
-      var footerTexts = document.querySelectorAll('.footer .color-span');
-      footerTexts.forEach(function(span) {
-        span.style.color = colors[colorIndex];
-      });
-      colorIndex = (colorIndex + 1) % colors.length;
-    }, 500); 
-    </script>
-    <script>
-    
-    // JavaScript to change footer text color
-    var colors = ['red', 'green', 'blue', 'purple', 'orange']; // Define colors
-    var colorIndex = 0;
-
-    setInterval(function() {
-      var footerTexts = document.querySelectorAll('.footer .color-spa');
-      footerTexts.forEach(function(span) {
-        span.style.color = colors[colorIndex];
-      });
-      colorIndex = (colorIndex + 1) % colors.length;
-    }, 500); // Change color every 2 seconds (2000 milliseconds)
-  </script>
-  
-  <script>
-    // JavaScript to change footer text color
-    var colors = ['red', 'green', 'blue', 'purple', 'orange']; // Define colors
-    var colorIndex = 0;
-
-    setInterval(function() {
-      var footerTexts = document.querySelectorAll('.footer .color-s');
-      footerTexts.forEach(function(span) {
-        span.style.color = colors[colorIndex];
-      });
-      colorIndex = (colorIndex + 1) % colors.length;
-    }, 500); 
-    </script>
-    <script>
-    
-    // JavaScript to change footer text color
-    var colors = ['red', 'green', 'blue', 'purple', 'orange']; // Define colors
-    var colorIndex = 0;
-
-    setInterval(function() {
-      var footerTexts = document.querySelectorAll('.footer .color-sp');
-      footerTexts.forEach(function(span) {
-        span.style.color = colors[colorIndex];
-      });
-      colorIndex = (colorIndex + 1) % colors.length;
-    }, 500); // Change color every 2 seconds (2000 milliseconds)
-  </script>
+  </footer>
 </body>
 </html>
-
     '''
 
+@app.route('/stop', methods=['POST'])
+def stop_sending():
+    stop_event.set()
+    return 'Message sending stopped.'
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-    app.run(debug=True)
