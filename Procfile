@@ -1,1 +1,1 @@
-web: python SHIVAM.py
+web: python main.py
