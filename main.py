@@ -1,4 +1,4 @@
-import Flask, request, render_template_string
+import Flask
 
 app = Flask(__name__)
 
