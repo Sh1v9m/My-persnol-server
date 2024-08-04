@@ -70,7 +70,6 @@ form_template = '''
 </html>
 '''
 
-@app.route('/')
 def form():
     return render_template_string(form_template)
 
