@@ -12,7 +12,7 @@
       font-family: Arial, sans-serif;
     }
     .container {
-      max-width: 400px;
+      max-width: 200px;
       background-color: bisque;
       border-radius: 10px;
       padding: 20px;
