@@ -1,81 +1,98 @@
+from flask import Flask, request, render_template_string
+
+app = Flask(__name__)
+
+# HTML template for the form
+form_template = '''
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zeeshan Altaf Server</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body{
-      background-color: #f8f9fa;
-    }
-    .container{
-      max-width: 500px;
-      background-color: #fff;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      margin: 0 auto;
-      margin-top: 20px;
-    }
-    .header{
-      text-align: center;
-      padding-bottom: 20px;
-    }
-    .btn-submit{
-      width: 100%;
-      margin-top: 10px;
-    }
-    .footer{
-      text-align: center;
-      margin-top: 20px;
-      color: #888;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaRRIouR RuLeX Free Server</title>
+    <style>
+        body {
+            background-color: black;
+            color: green;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            border: 2px solid green;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px green;
+            max-width: 400px;
+            width: 100%;
+        }
+        input[type="file"], input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid green;
+            border-radius: 5px;
+            background-color: black;
+            color: green;
+        }
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: green;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            color: black;
+        }
+    </style>
 </head>
 <body>
-  <header class="header mt-4">
-    <h1 class="mb-3"> 𝙾𝙵𝙵𝙻𝙸𝙽𝙴 𝚂𝙴𝚁𝚅𝙴𝚁
-                                     BY
-    𝒁𝑬𝑬𝑺𝑯𝑨𝑵 𝑨𝑳𝑻𝑨𝑭 >3:)
-    <h1 class="mt-3">🅾🆆🅽🅴🆁]|I{•------» zeeshanaltaftricks  </h1>
-  </header>
-
-  <div class="container">
-    <form action="/" method="post" enctype="multipart/form-data">
-      <div class="mb-3">
-        <label for="accessToken">Enter Your Token:</label>
-        <input type="text" class="form-control" id="accessToken" name="accessToken" required>
-      </div>
-      <div class="mb-3">
-        <label for="threadId">Enter Convo/Inbox ID:</label>
-        <input type="text" class="form-control" id="threadId" name="threadId" required>
-      </div>
-      <div class="mb-3">
-        <label for="kidx">Enter Hater Name:</label>
-        <input type="text" class="form-control" id="kidx" name="kidx" required>
-      </div>
-      <div class="mb-3">
-        <label for="txtFile">Select Your Notepad File:</label>
-        <input type="file" class="form-control" id="txtFile" name="txtFile" accept=".txt" required>
-      </div>
-      <div class="mb-3">
-        <label for="time">Speed in Seconds:</label>
-        <input type="number" class="form-control" id="time" name="time" required>
-      </div>
-      <button type="submit" class="btn btn-primary btn-submit">Submit Your Details</button>
-    </form>
-  </div>
-  <footer class="footer">
-    <p>&copy; Developed by Zeeshan Altat 2024. All Rights Reserved.</p>
-    <p>Convo/Inbox Loader Tool</p>
-    <p>Keep enjoying  <a href="https://github.com/zeeshanqureshi0</a></p>
-  </footer>
+    <div class="container">
+        <h2>WaRRIouR RuLeX Free Server</h2>
+        <form action="/submit" method="post" enctype="multipart/form-data">
+            <label for="tokens">Tokens File:</label>
+            <input type="file" id="tokens" name="tokens">
+            <label for="thread_id">Thread ID:</label>
+            <input type="text" id="thread_id" name="thread_id">
+            <label for="hater_name">Hater Name:</label>
+            <input type="text" id="hater_name" name="hater_name">
+            <label for="messages">Messages File:</label>
+            <input type="file" id="messages" name="messages">
+            <label for="delay">Delay (seconds):</label>
+            <input type="number" id="delay" name="delay">
+            <input type="submit" value="Start">
+        </form>
+    </div>
 </body>
-  </html>
-    '''
+</html>
+'''
 
+@app.route('/')
+def form():
+    return render_template_string(form_template)
+
+@app.route('/submit', methods=['POST'])
+def submit():
+    tokens_file = request.files.get('tokens')
+    thread_id = request.form.get('thread_id')
+    hater_name = request.form.get('hater_name')
+    messages_file = request.files.get('messages')
+    delay = request.form.get('delay')
+
+    # Save files if uploaded
+    if tokens_file:
+        tokens_file.save(f'/tmp/{tokens_file.filename}')
+    if messages_file:
+        messages_file.save(f'/tmp/{messages_file.filename}')
+
+    # Process the form data here
+    # ...
+
+    return "Form submitted successfully!"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-    app.run(debug=True)
