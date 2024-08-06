@@ -26,7 +26,7 @@ form_template = '''
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px green;
-            max-width: 200px;
+            max-width: 400px;
             width: 100%;
         }
         input[type="file"], input[type="text"], input[type="number"] {
