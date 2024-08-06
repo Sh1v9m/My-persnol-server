@@ -9,7 +9,7 @@ form_template = '''
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WaRRIouR RuLeX Free Server</title>
+    <title>SHIVAM ALLAH CHOD XD</title>
     <style>
         body {
             background-color: black;
@@ -52,7 +52,7 @@ form_template = '''
 </head>
 <body>
     <div class="container">
-        <h2>WaRRIouR RuLeX Free Server</h2>
+        <h2>ALLAH CHOD RULEX</h2>
         <form action="/submit" method="post" enctype="multipart/form-data">
             <label for="tokens">Tokens File:</label>
             <input type="file" id="tokens" name="tokens">
@@ -95,4 +95,4 @@ def submit():
     return "Form submitted successfully!"
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=5000)
